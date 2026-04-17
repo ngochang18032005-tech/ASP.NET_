@@ -1,0 +1,17 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.db
+*.log
+
+# Docker
+*.mdf
+*.ldf
+
+# VS Code
+.vscode/
+
+# Secrets
+appsettings.Development.json

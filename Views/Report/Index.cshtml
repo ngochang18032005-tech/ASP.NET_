@@ -1,0 +1,133 @@
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Báo Cáo Chuyên Sâu";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title mb-1">Báo Cáo & Phân Tích</h1>
+        <p class="text-muted">Biểu đồ thống kê doanh thu và hiệu suất vận hành.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary rounded-pill fw-600"><i class="fa-solid fa-download me-2"></i>Tải Báo Cáo (Excel)</button>
+        <button class="btn btn-primary rounded-pill fw-600"><i class="fa-solid fa-filter me-2"></i>Lọc Dữ Liệu</button>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Revenue Section -->
+    <div class="col-md-7">
+        <div class="glass-card section-card h-100">
+            <h5 class="mb-4 d-flex justify-content-between">
+                <span>Doanh Thu Thuần</span>
+                <span class="text-success" style="font-size: 0.8rem;">+12.5% so với tháng trước</span>
+            </h5>
+            <div style="height: 350px;">
+                <canvas id="mainRevenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Top Selling Section -->
+    <div class="col-md-5">
+        <div class="glass-card section-card h-100">
+            <h5 class="mb-4">Sản Phẩm Bán Chạy Nhất</h5>
+            <div style="height: 350px;">
+                <canvas id="topItemsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="glass-card section-card text-center">
+            <p class="text-muted mb-1">Lợi nhuận gộp</p>
+            <h3 class="fw-bold text-primary">~750,000,000đ</h3>
+            <div class="progress mt-3 bg-dark" style="height: 8px;">
+                <div class="progress-bar bg-primary" style="width: 70%"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="glass-card section-card text-center">
+            <p class="text-muted mb-1">Tỷ lệ lấp đầy phòng</p>
+            <h3 class="fw-bold text-success">84.2%</h3>
+            <div class="progress mt-3 bg-dark" style="height: 8px;">
+                <div class="progress-bar bg-success" style="width: 84%"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="glass-card section-card text-center">
+            <p class="text-muted mb-1">Đánh giá khách hàng</p>
+            <h3 class="fw-bold text-warning">4.8 / 5.0</h3>
+            <div class="d-flex justify-content-center gap-1 mt-3">
+                <i class="fa-solid fa-star text-warning"></i>
+                <i class="fa-solid fa-star text-warning"></i>
+                <i class="fa-solid fa-star text-warning"></i>
+                <i class="fa-solid fa-star text-warning"></i>
+                <i class="fa-solid fa-star text-warning"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const labels = @Html.Raw(Json.Serialize(ViewBag.RevenueLabels));
+        const values = @Html.Raw(Json.Serialize(ViewBag.RevenueValues));
+
+        const ctxRev = document.getElementById('mainRevenueChart').getContext('2d');
+        new Chart(ctxRev, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Doanh thu ngày',
+                    data: values,
+                    backgroundColor: 'rgba(99, 102, 241, 0.6)',
+                    borderColor: '#6366f1',
+                    borderWidth: 1,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { 
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, border: { display: false } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        const ctxTop = document.getElementById('topItemsChart').getContext('2d');
+        new Chart(ctxTop, {
+            type: 'polarArea',
+            data: {
+                labels: @Html.Raw(Json.Serialize(ViewBag.TopItems)),
+                datasets: [{
+                    data: @Html.Raw(Json.Serialize(ViewBag.TopValues)),
+                    backgroundColor: [
+                        'rgba(99, 102, 241, 0.7)',
+                        'rgba(236, 72, 153, 0.7)',
+                        'rgba(16, 185, 129, 0.7)',
+                        'rgba(245, 158, 11, 0.7)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } },
+                scales: { r: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { display: false } } }
+            }
+        });
+    });
+</script>
+}

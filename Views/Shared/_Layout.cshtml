@@ -1,50 +1,71 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - ASP</title>
-    <script type="importmap"></script>
+    <title>@ViewData["Title"] - LuxManage Resort & Spa</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- Site CSS -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/ASP.styles.css" asp-append-version="true" />
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">ASP</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+<body class="public-theme">
+    <header class="public-header">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-transparent fixed-top public-nav">
+            <div class="container">
+                <a class="navbar-brand logo-font" asp-controller="Home" asp-action="Index">
+                    <i class="fa-solid fa-crown text-warning me-2"></i>LuxManage
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navPublicMenu">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
+                <div class="collapse navbar-collapse" id="navPublicMenu">
+                    <ul class="navbar-nav mx-auto">
+                        <li class="nav-item"><a class="nav-link text-white text-uppercase fw-medium" href="/">Trang chủ</a></li>
+                        <li class="nav-item"><a class="nav-link text-white text-uppercase fw-medium" href="#rooms">Phòng & Suite</a></li>
+                        <li class="nav-item"><a class="nav-link text-white text-uppercase fw-medium" href="#dining">Ẩm thực</a></li>
+                        <li class="nav-item"><a class="nav-link text-white text-uppercase fw-medium" href="#promotions">Khuyến mãi</a></li>
                     </ul>
+                    <div class="d-flex gap-3 align-items-center">
+                        <a asp-controller="Dashboard" asp-action="Index" class="text-white text-decoration-none" style="font-size: 0.9rem;">Admin Login</a>
+                        <button class="btn btn-warning px-4 rounded-pill fw-bold text-dark text-uppercase shadow-sm">Đặt Phòng</button>
+                    </div>
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
+    <main class="public-content">
+        @RenderBody()
+    </main>
+
+    <footer class="public-footer text-center py-5 bg-dark text-white-50">
         <div class="container">
-            &copy; 2026 - ASP - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <h4 class="text-white mb-3 logo-font"><i class="fa-solid fa-crown text-warning me-2"></i>LuxManage</h4>
+            <p>123 Đường Tôn Đức Thắng, Quận 1, TP. HCM | Hotline: 1800-xxxx</p>
+            <p class="mb-0 mt-4">&copy; 2026 LuxManage Resort & Spa. All rights reserved.</p>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        $(window).scroll(function() {
+            if ($(this).scrollTop() > 50) {
+                $('.public-nav').addClass('scrolled');
+            } else {
+                $('.public-nav').removeClass('scrolled');
+            }
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

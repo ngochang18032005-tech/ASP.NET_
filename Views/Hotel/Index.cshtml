@@ -1,0 +1,313 @@
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản Lý Khách Sạn";
+}
+
+<style>
+    .hotel-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 16px;
+    }
+    .room-card {
+        padding: 20px;
+        text-align: center;
+        border-radius: 12px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+    }
+    .room-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--glass-shadow);
+    }
+    .room-icon {
+        font-size: 2rem;
+        margin-bottom: 12px;
+    }
+    .room-number {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    .room-type {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin: 4px 0 8px;
+    }
+    
+    /* Status Colors */
+    .room-available {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .room-available .room-icon { color: var(--success); }
+    
+    .room-occupied {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .room-occupied .room-icon { color: var(--danger); }
+    
+    .room-cleaning {
+        background: rgba(245, 158, 11, 0.1);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    .room-cleaning .room-icon { color: var(--warning); }
+</style>
+
+<ul class="nav nav-pills gap-2 mb-4" id="hotelTab" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active rounded-pill px-4" id="rooms-tab" data-bs-toggle="tab" data-bs-target="#rooms-pane" type="button" role="tab"><i class="fa-solid fa-door-open me-2"></i>Sơ Đồ Phòng</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link rounded-pill px-4" id="bookings-tab" data-bs-toggle="tab" data-bs-target="#bookings-pane" type="button" role="tab" onclick="loadBookings()"><i class="fa-solid fa-calendar-check me-2"></i>Danh Sách Đặt Phòng</button>
+  </li>
+</ul>
+
+<div class="tab-content" id="hotelTabContent">
+  <!-- Tab Rooms -->
+  <div class="tab-pane fade show active" id="rooms-pane" role="tabpanel">
+    <div class="glass-card section-card">
+        <div class="hotel-grid" id="hotelGrid">
+            <!-- Room Data API -->
+        </div>
+    </div>
+  </div>
+
+  <!-- Tab Bookings -->
+  <div class="tab-pane fade" id="bookings-pane" role="tabpanel">
+    <div class="glass-card section-card">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover mb-0">
+                <thead>
+                    <tr class="text-muted" style="font-size: 0.85rem; border-bottom: 2px solid rgba(255,255,255,0.05);">
+                        <th>KHÁCH HÀNG</th>
+                        <th>PHÒNG</th>
+                        <th>NHẬN PHÒNG</th>
+                        <th>TRẢ PHÒNG</th>
+                        <th>TRẠNG THÁI</th>
+                        <th class="text-end">THAO TÁC</th>
+                    </tr>
+                </thead>
+                <tbody id="bookingsTableBody" style="font-size: 0.95rem;">
+                    <!-- Booking Data API -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Add Room -->
+<div class="modal fade" id="addRoomModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content glass-card border-0">
+      <div class="modal-header border-bottom border-secondary">
+        <h5 class="modal-title text-white">Thêm Phòng Mới</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="frmAddRoom">
+            <div class="mb-3">
+                <label class="form-label text-muted">Số Phòng</label>
+                <input type="text" id="roomNumberInput" class="form-control bg-transparent text-white border-secondary" placeholder="Vd: 301" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted">Trạng Thái (Status)</label>
+                <select id="roomStatusInput" class="form-select bg-dark text-white border-secondary">
+                    <option value="Trống">Trống</option>
+                    <option value="Có khách">Có khách</option>
+                    <option value="Đang dọn">Đang dọn</option>
+                </select>
+            </div>
+        </form>
+      </div>
+      <div class="modal-footer border-top border-secondary">
+        <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Hủy bỏ</button>
+        <button type="button" class="btn btn-primary rounded-pill px-4" onclick="addRoom()">Hoàn tất</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section Scripts {
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        loadRooms();
+    });
+
+    function getRoomHtml(room) {
+        let cardClass = '';
+        let iconHtml = '';
+        let badgeStyle = '';
+        let statusText = room.status || 'Trống';
+
+        if(statusText === 'Trống' || statusText.toLowerCase() === 'available') {
+            cardClass = 'room-available';
+            iconHtml = '<i class="fa-solid fa-door-open"></i>';
+            badgeStyle = 'badge-success';
+            statusText = 'Trống';
+        } else if (statusText === 'Có khách' || statusText.toLowerCase() === 'occupied') {
+            cardClass = 'room-occupied';
+            iconHtml = '<i class="fa-solid fa-bed"></i>';
+            badgeStyle = '';
+            statusText = 'Có khách';
+        } else {
+            cardClass = 'room-cleaning';
+            iconHtml = '<i class="fa-solid fa-broom"></i>';
+            badgeStyle = 'badge-warning';
+            statusText = 'Đang dọn';
+        }
+
+        let extraBadgeCss = badgeStyle === '' ? 'style="background: rgba(239,68,68,0.2); color: var(--danger);"' : '';
+
+        return `
+            <div class="room-card ${cardClass}" style="position: relative;">
+                <div class="room-icon">${iconHtml}</div>
+                <h3 class="room-number">${room.roomNumber}</h3>
+                <p class="room-type">Phòng Khách Sạn</p>
+                <span class="badge-status ${badgeStyle}" ${extraBadgeCss}>${statusText}</span>
+                
+                <div class="room-actions mt-3 pt-2 border-top border-secondary d-flex justify-content-center gap-2">
+                    <button class="btn btn-sm text-info p-0" onclick="editRoom(${room.id}, '${room.roomNumber}', '${room.status}')"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button class="btn btn-sm text-danger p-0 ms-2" onclick="deleteRoom(${room.id})"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </div>
+        `;
+    }
+
+    function editRoom(id, number, status) {
+        document.getElementById('modalTitle').innerText = 'Chỉnh Sửa Phòng';
+        document.getElementById('roomNumberInput').value = number;
+        document.getElementById('roomStatusInput').value = status;
+        // Store ID in a hidden way or just use a global
+        window.currentEditRoomId = id;
+        new bootstrap.Modal(document.getElementById('addRoomModal')).show();
+    }
+
+    function deleteRoom(id) {
+        if(!confirm('Bạn có chắc chắn muốn xóa phòng này?')) return;
+        fetch(`/api/rooms/${id}`, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) loadRooms();
+                else alert('Xóa thất bại.');
+            });
+    }
+
+    function loadRooms() {
+        const grid = document.getElementById('hotelGrid');
+        grid.innerHTML = '<div class="text-white">Đang tải dữ liệu...</div>';
+        
+        fetch('/api/rooms')
+            .then(res => res.json())
+            .then(res => {
+                const data = res.data || [];
+                grid.innerHTML = '';
+                if(data.length === 0) {
+                    grid.innerHTML = '<div class="col-12 text-muted">Chưa có phòng nào trong CSDL. Bấm thêm phòng nhé!</div>';
+                    return;
+                }
+                data.forEach(room => {
+                    grid.insertAdjacentHTML('beforeend', getRoomHtml(room));
+                });
+            })
+            .catch(err => {
+                console.error("Lỗi get API rooms", err);
+                grid.innerHTML = '<div class="text-danger">Không thể tải luồng API Khách sạn. Xem console.</div>';
+            });
+    }
+
+    function addRoom() {
+        const roomNumber = document.getElementById('roomNumberInput').value;
+        const status = document.getElementById('roomStatusInput').value;
+        const id = window.currentEditRoomId;
+        
+        if(!roomNumber) {
+            alert('Vui lòng nhập mã số phòng.');
+            return;
+        }
+
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/rooms/${id}` : '/api/rooms';
+
+        fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roomNumber: roomNumber, status: status })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('addRoomModal')).hide();
+                document.getElementById('frmAddRoom').reset();
+                window.currentEditRoomId = null;
+                document.getElementById('modalTitle').innerText = 'Thêm Phòng Mới';
+                loadRooms();
+            } else {
+                alert("Thao tác lỗi: " + JSON.stringify(data.errors || data.message));
+            }
+        });
+    }
+    function loadBookings() {
+        const tbody = document.getElementById('bookingsTableBody');
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Đang tải danh sách đặt phòng...</td></tr>';
+
+        fetch('/api/bookings')
+            .then(res => res.json())
+            .then(data => {
+                tbody.innerHTML = '';
+                if(data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Chưa có lượt đặt phòng nào.</td></tr>';
+                    return;
+                }
+
+                data.forEach(b => {
+                    const checkin = new Date(b.checkIn).toLocaleDateString('vi-VN');
+                    const checkout = new Date(b.checkOut).toLocaleDateString('vi-VN');
+                    
+                    let statusBadge = '<span class="badge bg-warning text-dark">Chờ nhận phòng</span>';
+                    let actions = `<button class="btn btn-sm btn-primary rounded-pill px-3" onclick="checkInBooking(${b.id})">Check-in</button>`;
+
+                    if(b.status === 'CHECKED_IN') {
+                        statusBadge = '<span class="badge bg-success">Đang ở</span>';
+                        actions = `<button class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="checkOutBooking(${b.id})">Check-out</button>`;
+                    } else if (b.status === 'CHECKED_OUT') {
+                        statusBadge = '<span class="badge bg-secondary">Đã trả phòng</span>';
+                        actions = '<i class="fa-solid fa-check-double text-muted"></i>';
+                    }
+
+                    tbody.insertAdjacentHTML('beforeend', `
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                            <td class="py-3">
+                                <div class="fw-bold text-white">${b.customerName || 'Khách Vãng Lai'}</div>
+                                <div class="text-muted small">${b.customerPhone || 'Không có SĐT'}</div>
+                            </td>
+                            <td class="py-3">Phòng ${b.roomId}</td>
+                            <td class="py-3">${checkin}</td>
+                            <td class="py-3">${checkout}</td>
+                            <td class="py-3">${statusBadge}</td>
+                            <td class="py-3 text-end">${actions}</td>
+                        </tr>
+                    `);
+                });
+            });
+    }
+
+    function checkInBooking(id) {
+        if(!confirm('Xác nhận khách đã đến và nhận phòng?')) return;
+        fetch(`/api/bookings/${id}/checkin`, { method: 'PUT' })
+            .then(res => {
+                if(res.ok) loadBookings();
+            });
+    }
+
+    function checkOutBooking(id) {
+        if(!confirm('Xác nhận khách trả phòng và thanh toán?')) return;
+        fetch(`/api/bookings/${id}/checkout`, { method: 'PUT' })
+            .then(res => {
+                if(res.ok) loadBookings();
+            });
+    }
+</script>
+}

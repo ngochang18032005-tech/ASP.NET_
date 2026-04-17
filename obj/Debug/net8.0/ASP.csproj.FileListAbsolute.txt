@@ -141,6 +141,6 @@ D:\ASP.NET\ASP\obj\Debug\net8.0\refint\ASP.dll
 D:\ASP.NET\ASP\obj\Debug\net8.0\ASP.pdb
 D:\ASP.NET\ASP\obj\Debug\net8.0\ASP.genruntimeconfig.cache
 D:\ASP.NET\ASP\obj\Debug\net8.0\ref\ASP.dll
-D:\ASP.NET\ASP\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 D:\ASP.NET\ASP\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
 D:\ASP.NET\ASP\bin\Debug\net8.0\BCrypt.Net-Next.dll
+D:\ASP.NET\ASP\obj\Debug\net8.0\ASP.sourcelink.json

@@ -1,8 +1,278 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"] = "LuxManage Resort - Thiên Đường Nghỉ Dưỡng";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<style>
+/* Specific Landing Page Styles */
+.hero-banner {
+    height: 100vh;
+    background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1542314831-c6a4d81d7290?q=80&w=2000&auto=format&fit=crop') center/cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+}
+
+.hero-content h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 4.5rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+.hero-content p {
+    font-size: 1.25rem;
+    font-weight: 300;
+    margin-bottom: 40px;
+}
+
+.booking-widget {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 24px;
+    border-radius: 16px;
+    display: flex;
+    gap: 16px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.booking-input {
+    text-align: left;
+}
+
+.booking-input label {
+    display: block;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    color: var(--warning);
+    margin-bottom: 8px;
+}
+
+.booking-input input, .booking-input select {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255,255,255,0.5);
+    color: white;
+    padding: 8px 0;
+    width: 100%;
+    outline: none;
+}
+.booking-input input::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}
+
+.section-padding {
+    padding: 100px 0;
+}
+
+.section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.room-card-public {
+    border: none;
+    background: transparent;
+    transition: transform 0.3s;
+}
+.room-card-public:hover {
+    transform: translateY(-10px);
+}
+.room-card-public img {
+    border-radius: 12px;
+    height: 250px;
+    object-fit: cover;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+.room-card-public h4 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+}
+
+.public-nav {
+    transition: all 0.3s;
+    padding: 20px 0;
+}
+.public-nav.scrolled {
+    background: rgba(0,0,0,0.85) !important;
+    backdrop-filter: blur(10px);
+    padding: 10px 0;
+}
+.logo-font {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+}
+</style>
+
+<!-- Hero Section -->
+<section class="hero-banner">
+    <div class="container hero-content">
+        <h1>Tận hưởng cuộc sống xa hoa</h1>
+        <p>Khu nghỉ dưỡng & Spa tiêu chuẩn 5 sao đẳng cấp quốc tế</p>
+        
+        <div class="booking-widget">
+            <div class="booking-input" style="flex: 1.5;">
+                <label>Nhận phòng</label>
+                <input type="date" id="checkinDate" value="2026-04-18" />
+            </div>
+            <div class="booking-input" style="flex: 1.5;">
+                <label>Trả phòng</label>
+                <input type="date" id="checkoutDate" value="2026-04-20" />
+            </div>
+            <div class="booking-input" style="flex: 2;">
+                <label>Họ tên</label>
+                <input type="text" id="guestName" placeholder="Tên của bạn..." />
+            </div>
+            <div class="booking-input" style="flex: 2;">
+                <label>Số điện thoại</label>
+                <input type="tel" id="guestPhone" placeholder="090..." />
+            </div>
+            <div class="d-flex align-items-end ms-2">
+                <button type="button" onclick="handleBooking()" class="btn btn-warning px-4 py-2 fw-bold text-uppercase h-100 shadow rounded-3">Kiểm tra giá</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Rooms -->
+<section class="section-padding bg-light text-dark">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Phòng Lưu Trú Đẳng Cấp</h2>
+            <p class="text-muted" style="max-width: 600px; margin: 0 auto;">Trải nghiệm không gian nghỉ dưỡng tuyệt vời với tầm nhìn ôm trọn bãi biển và các tiện ích chuẩn hoàng gia.</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="room-card-public">
+                    <img src="https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=800&auto=format&fit=crop" class="w-100" alt="Deluxe Ocean View">
+                    <h4>Deluxe Ocean View</h4>
+                    <p class="text-muted">Từ $150 / đêm</p>
+                    <a href="#" class="text-dark fw-bold text-decoration-none border-bottom border-dark pb-1">Khám phá chi tiết <i class="fa-solid fa-arrow-right ms-2"></i></a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="room-card-public">
+                    <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?q=80&w=800&auto=format&fit=crop" class="w-100" alt="Premium Suite">
+                    <h4>Premium Suite</h4>
+                    <p class="text-muted">Từ $280 / đêm</p>
+                    <a href="#" class="text-dark fw-bold text-decoration-none border-bottom border-dark pb-1">Khám phá chi tiết <i class="fa-solid fa-arrow-right ms-2"></i></a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="room-card-public">
+                    <img src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=800&auto=format&fit=crop" class="w-100" alt="Presidential Villa">
+                    <h4>Presidential Villa</h4>
+                    <p class="text-muted">Từ $850 / đêm</p>
+                    <a href="#" class="text-dark fw-bold text-decoration-none border-bottom border-dark pb-1">Khám phá chi tiết <i class="fa-solid fa-arrow-right ms-2"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Dining Section -->
+<section class="section-padding bg-white text-dark">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6 pe-md-5">
+                <h2 class="section-title">Tinh Hoa Ẩm Thực</h2>
+                <p class="text-muted fs-5 mb-4">Các siêu đầu bếp đẳng cấp của chúng tôi sẽ đánh thức mọi giác quan của bạn bằng những kiệt tác ẩm thực từ Địa Trung Hải và Á Đông.</p>
+                <button class="btn btn-dark px-4 py-2 rounded-pill shadow">Xem Menu Nhà Hàng</button>
+            </div>
+            <div class="col-md-6 mt-4 mt-md-0 pt-4">
+                <img src="https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=800&auto=format&fit=crop" class="w-100 rounded-4 shadow-lg" alt="Restaurant Interior">
+            </div>
+        </div>
+    </div>
+</section>
+<!-- SweetAlert2 for notifications -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    async function handleBooking() {
+            const checkin = document.getElementById('checkinDate').value;
+            const checkout = document.getElementById('checkoutDate').value;
+            const guestName = document.getElementById('guestName').value;
+            const guestPhone = document.getElementById('guestPhone').value;
+
+            if (!checkin || !checkout || !guestName || !guestPhone) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Thiếu thông tin',
+                    text: 'Vui lòng nhập đầy đủ ngày và thông tin liên hệ!',
+                    background: '#1a1a1a',
+                    color: '#fff'
+                });
+                return;
+            }
+
+            // Simulate booking request
+            const loadingSwal = Swal.fire({
+                title: 'Đang kiểm tra phòng trống...',
+                allowOutsideClick: false,
+                background: '#1a1a1a',
+                color: '#fff',
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                const response = await fetch('/api/bookings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        roomId: 1, // Defaulting to room 1 for POC
+                        checkIn: checkin,
+                        checkOut: checkout,
+                        customerName: guestName,
+                        customerPhone: guestPhone,
+                        status: 'PENDING'
+                    })
+                });
+
+            setTimeout(() => {
+                Swal.close();
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Đặt chỗ thành công!',
+                        text: 'Cảm ơn bạn đã tin tưởng LuxManage. Chúng tôi sẽ liên hệ sớm nhất!',
+                        timer: 3000,
+                        background: '#1a1a1a',
+                        color: '#fff',
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Phòng đã kín',
+                        text: 'Rất tiếc, ngày bạn chọn hiện không còn phòng trống. Vui lòng chọn ngày khác!',
+                        background: '#1a1a1a',
+                        color: '#fff'
+                    });
+                }
+            }, 1000);
+
+        } catch (error) {
+            Swal.close();
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi hệ thống',
+                text: 'Không thể kết nối tới máy chủ. Vui lòng thử lại sau.',
+                background: '#1a1a1a',
+                color: '#fff'
+            });
+        }
+    }
+</script>

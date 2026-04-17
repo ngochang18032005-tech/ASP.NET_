@@ -1,4 +1,4 @@
-﻿using ASP.Data;
+using ASP.Data;
 using ASP.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +27,14 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+// Seed data
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<AppDbContext>();
+    DbInitializer.Initialize(context);
+}
 
 // Middleware
 app.UseSwagger();

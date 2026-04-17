@@ -1,0 +1,149 @@
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản Lý Thực Đơn";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title mb-1">Thực Đơn Nhà Hàng</h1>
+        <p class="text-muted">Quản lý các món ăn và đồ uống trong hệ thống POS.</p>
+    </div>
+    <div class="actions">
+        <button class="btn btn-primary px-4 py-2" data-bs-toggle="modal" data-bs-target="#addMenuModal" style="border-radius: 20px;">
+            <i class="fa-solid fa-plus me-2"></i>Thêm Món Mới
+        </button>
+    </div>
+</div>
+
+<div class="glass-card section-card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>MÓN ĂN</th>
+                    <th>PHÂN LOẠI</th>
+                    <th>ĐƠN GIÁ</th>
+                    <th>MÔ TẢ</th>
+                    <th class="text-end">HÀNH ĐỘNG</th>
+                </tr>
+            </thead>
+            <tbody id="menuTableBody">
+                <!-- Dữ liệu load từ API -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Add/Edit Menu Item -->
+<div class="modal fade" id="addMenuModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content glass-card border-0">
+      <div class="modal-header border-bottom border-secondary">
+        <h5 class="modal-title text-white" id="modalTitle">Thêm Món Mới</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="frmMenu">
+            <input type="hidden" id="menuId">
+            <div class="mb-3">
+                <label class="form-label text-muted">Tên Món Ăn</label>
+                <input type="text" id="menuName" class="form-control bg-transparent text-white border-secondary" required>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-muted">Đơn Giá (VNĐ)</label>
+                    <input type="number" id="menuPrice" class="form-control bg-transparent text-white border-secondary" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-muted">Phân Loại</label>
+                    <select id="menuCategory" class="form-select bg-dark text-white border-secondary">
+                        <option value="Món Chính">Món Chính</option>
+                        <option value="Đồ Uống">Đồ Uống</option>
+                        <option value="Khai Vị">Khai Vị</option>
+                        <option value="Tráng Miệng">Tráng Miệng</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted">Mô tả ngắn</label>
+                <textarea id="menuDesc" class="form-control bg-transparent text-white border-secondary" rows="3"></textarea>
+            </div>
+        </form>
+      </div>
+      <div class="modal-footer border-top border-secondary">
+        <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="btn btn-primary rounded-pill px-4" onclick="saveMenu()">Lưu món ăn</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section Scripts {
+<script>
+    document.addEventListener("DOMContentLoaded", loadMenu);
+
+    function loadMenu() {
+        fetch('/api/menu')
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('menuTableBody');
+                tbody.innerHTML = '';
+                data.forEach(item => {
+                    tbody.insertAdjacentHTML('beforeend', `
+                        <tr>
+                            <td><div class="fw-bold">${item.name}</div></td>
+                            <td><span class="badge bg-secondary rounded-pill">${item.category}</span></td>
+                            <td class="text-success fw-bold">${item.price.toLocaleString()}đ</td>
+                            <td class="text-muted small">${item.description || ''}</td>
+                            <td class="text-end">
+                                <button class="action-btn text-info border-0" onclick="editModal(${item.id}, '${item.name}', ${item.price}, '${item.category}', '${item.description || ''}')"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button class="action-btn text-danger border-0 ms-2" onclick="deleteMenu(${item.id})"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `);
+                });
+            });
+    }
+
+    function editModal(id, name, price, cat, desc) {
+        document.getElementById('modalTitle').innerText = 'Chỉnh Sửa Món Ăn';
+        document.getElementById('menuId').value = id;
+        document.getElementById('menuName').value = name;
+        document.getElementById('menuPrice').value = price;
+        document.getElementById('menuCategory').value = cat;
+        document.getElementById('menuDesc').value = desc;
+        new bootstrap.Modal(document.getElementById('addMenuModal')).show();
+    }
+
+    function saveMenu() {
+        const id = document.getElementById('menuId').value;
+        const payload = {
+            name: document.getElementById('menuName').value,
+            price: document.getElementById('menuPrice').value,
+            category: document.getElementById('menuCategory').value,
+            description: document.getElementById('menuDesc').value
+        };
+
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/menu/${id}` : '/api/menu';
+
+        fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).then(res => {
+            if (res.ok) {
+                bootstrap.Modal.getInstance(document.getElementById('addMenuModal')).hide();
+                loadMenu();
+            }
+        });
+    }
+
+    function deleteMenu(id) {
+        if (!confirm('Xóa món ăn này?')) return;
+        fetch(`/api/menu/${id}`, { method: 'DELETE' }).then(res => {
+            if (res.ok) loadMenu();
+        });
+    }
+</script>
+}

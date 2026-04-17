@@ -1,0 +1,445 @@
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản Lý Nhà Hàng";
+}
+
+<style>
+    .restaurant-layout {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+    }
+    .tables-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 16px;
+    }
+    .table-card {
+        padding: 20px;
+        text-align: center;
+        border-radius: 12px;
+        cursor: pointer;
+        position: relative;
+    }
+    .table-icon {
+        font-size: 2.5rem;
+        margin-bottom: 8px;
+    }
+    .table-number {
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin: 0;
+    }
+    .table-seats {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    
+    .table-free {
+        background: rgba(16, 185, 129, 0.05);
+        border: 2px dashed rgba(16, 185, 129, 0.4);
+    }
+    .table-free .table-icon { color: var(--success); }
+    
+    .table-active {
+        background: rgba(99, 102, 241, 0.15);
+        border: 2px solid var(--primary);
+    }
+    .table-active .table-icon { color: var(--primary); }
+    .table-time {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        background: var(--danger);
+        color: white;
+        font-size: 0.7rem;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-weight: bold;
+    }
+
+    .order-sidebar {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .bill-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .bill-item:last-child {
+        border-bottom: none;
+    }
+    .bill-item-name { font-weight: 500; font-size: 0.95rem; }
+    .bill-item-qty { color: var(--text-muted); font-size: 0.85rem; }
+    .bill-item-price { font-weight: 600; color: var(--success); }
+    
+    .bill-total {
+        margin-top: auto;
+        padding-top: 20px;
+        border-top: 2px dashed rgba(255,255,255,0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+</style>
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title mb-1">Sơ Đồ Bàn Ăn</h1>
+        <p class="text-muted">Đang có 8 bàn sử dụng dịch vụ.</p>
+    </div>
+</div>
+
+<div class="restaurant-layout">
+    <div class="glass-card section-card">
+        <h4 class="mb-4">Khu Vực Trong Nhà</h4>
+        <div class="tables-grid" id="tablesGrid">
+            <!-- Tables will be loaded here -->
+        </div>
+    </div>
+    
+    <div class="order-sidebar" id="orderSidebar">
+        <!-- Sidebar content will be dynamic based on selected table -->
+        <div class="text-center py-5 text-muted">
+            <i class="fa-solid fa-utensils fa-3x mb-3 opacity-25"></i>
+            <p>Chọn một bàn để xem chi tiết</p>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Add Item -->
+<div class="modal fade" id="addItemModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content glass-card border-0">
+      <div class="modal-header border-bottom border-secondary">
+        <h5 class="modal-title text-white">Thêm Món Ăn</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="frmAddItem">
+            <div class="mb-3">
+                <label class="form-label text-muted">Chọn món</label>
+                <select id="itemMenuSelect" class="form-select bg-dark text-white border-secondary">
+                    <optgroup label="Món Chính">
+                        <option value="1">Bò Bít Tết Úc (650k)</option>
+                        <option value="2">Cá Hồi Áp Chảo (450k)</option>
+                    </optgroup>
+                    <optgroup label="Đồ Uống">
+                        <option value="3">Rượu Vang Đỏ Ly (300k)</option>
+                        <option value="4">Nước Ép Cam (80k)</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted">Số lượng</label>
+                <input type="number" id="itemQty" class="form-control bg-transparent text-white border-secondary" value="1" min="1" required>
+            </div>
+        </form>
+      </div>
+      <div class="modal-footer border-top border-secondary">
+        <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="btn btn-primary rounded-pill px-4" onclick="submitAddItem()">Xác nhận</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Pay -->
+<div class="modal fade" id="payModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0" style="background: var(--bg-dark); box-shadow: 0 0 50px rgba(16, 185, 129, 0.2);">
+      <div class="modal-header border-bottom border-secondary">
+        <h5 class="modal-title text-white"><i class="fa-solid fa-file-invoice-dollar text-success me-2"></i> Xác Nhận Thanh Toán</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center py-4">
+        <div class="text-muted mb-2">Tổng hóa đơn <span id="payTableLabel">...</span></div>
+        <h2 class="text-success fw-bold mb-4" id="payTotalAmount">0đ</h2>
+        
+        <div class="text-start mb-3">
+            <label class="form-label text-muted">Phương thức thanh toán</label>
+            <select class="form-select bg-dark text-white border-secondary">
+                <option>Tiền mặt (Cash)</option>
+                <option>Quẹt thẻ (POS)</option>
+                <option>Chuyển khoản (Bank Transfer)</option>
+                <option>Sạc vào phòng (Room Charge)</option>
+            </select>
+        </div>
+      </div>
+      <div class="modal-footer border-top border-secondary justify-content-between">
+        <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Trở lại</button>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-info rounded-pill px-4" onclick="printInvoice()"><i class="fa-solid fa-print me-2"></i>In Bill</button>
+            <button type="button" class="btn btn-success fw-bold rounded-pill px-5" onclick="processPayment()">Thu Tiền</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section Scripts {
+<script>
+    let currentTableId = null;
+    let currentOrderId = null;
+    let allOrders = [];
+    const tables = [
+        { id: 1, name: 'Bàn 01', seats: 4 },
+        { id: 2, name: 'Bàn 02', seats: 4 },
+        { id: 3, name: 'Bàn 03', seats: 2 },
+        { id: 4, name: 'Bàn 04', seats: 2 },
+        { id: 5, name: 'Bàn 05', seats: 8 },
+        { id: 6, name: 'Bàn 06', seats: 6 },
+        { id: 7, name: 'Bàn 07', seats: 4 },
+        { id: 8, name: 'Bàn 08', seats: 4 },
+    ];
+
+    let menuItems = {}; // Will be loaded from API
+
+    document.addEventListener("DOMContentLoaded", function() {
+        fetchMenu().then(() => {
+            refreshDashboard();
+        });
+    });
+
+    function fetchMenu() {
+        return fetch('/api/menu')
+            .then(res => res.json())
+            .then(data => {
+                data.forEach(item => {
+                    menuItems[item.id] = { name: item.name, price: item.price };
+                });
+                renderMenuSelect(data);
+            });
+    }
+
+    function renderMenuSelect(data) {
+        const select = document.getElementById('itemMenuSelect');
+        select.innerHTML = '';
+        
+        // Group by category if possible, or just list all
+        data.forEach(item => {
+            select.insertAdjacentHTML('beforeend', `
+                <option value="${item.id}">${item.name} (${(item.price/1000).toLocaleString()}k)</option>
+            `);
+        });
+    }
+
+    function refreshDashboard() {
+        fetch('/api/orders')
+            .then(res => res.json())
+            .then(data => {
+                allOrders = data.filter(o => o.status === 'OPEN');
+                renderTables();
+                if (currentTableId) selectTable(currentTableId);
+            });
+    }
+
+    function renderTables() {
+        const grid = document.getElementById('tablesGrid');
+        grid.innerHTML = '';
+        
+        tables.forEach(t => {
+            const order = allOrders.find(o => o.tableId === t.id);
+            const isActive = order != null;
+            const cardClass = isActive ? 'table-active' : 'table-free';
+            const icon = '<i class="fa-solid fa-utensils"></i>';
+            
+            const html = `
+                <div class="table-card ${cardClass}" onclick="selectTable(${t.id})">
+                    ${isActive ? `<div class="table-time">Active</div>` : ''}
+                    <div class="table-icon">${icon}</div>
+                    <p class="table-number">${t.name}</p>
+                    <p class="table-seats">${isActive ? 'Đang ngồi' : t.seats + ' chỗ'}</p>
+                </div>
+            `;
+            grid.insertAdjacentHTML('beforeend', html);
+        });
+    }
+
+    function selectTable(id) {
+        currentTableId = id;
+        const table = tables.find(t => t.id === id);
+        const order = allOrders.find(o => o.tableId === id);
+        currentOrderId = order ? order.id : null;
+
+        const sidebar = document.getElementById('orderSidebar');
+        
+        if (!order) {
+            sidebar.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="m-0">${table.name}</h4>
+                    <span class="badge bg-secondary text-white p-2">Trống</span>
+                </div>
+                <div class="text-center py-5">
+                    <p class="text-muted">Bàn này đang trống.</p>
+                    <button class="btn btn-primary rounded-pill px-4" onclick="openTable(${id})">Mở Bàn Ngay</button>
+                </div>
+            `;
+            return;
+        }
+
+        sidebar.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="m-0">${table.name}</h4>
+                <span class="badge bg-primary text-white p-2">Đang phục vụ</span>
+            </div>
+            <div class="bill-items-list mb-4" id="billItemsList">
+                <div class="text-white">Đang tải món...</div>
+            </div>
+            <div class="bill-total mb-4">
+                <span>Tổng Cộng</span>
+                <span class="text-primary" id="sidebarTotal">0đ</span>
+            </div>
+            <div class="d-grid gap-2">
+                <button class="btn btn-primary py-2" data-bs-toggle="modal" data-bs-target="#addItemModal" style="border-radius: 12px;"><i class="fa-solid fa-plus me-2"></i>Thêm Món</button>
+                <button class="btn btn-outline-success py-2" data-bs-toggle="modal" data-bs-target="#payModal" onclick="preparePayment()" style="border-radius: 12px;"><i class="fa-solid fa-money-bill-wave me-2"></i>Thanh Toán</button>
+            </div>
+        `;
+
+        loadOrderItems(order.id);
+    }
+
+    function loadOrderItems(orderId) {
+        fetch(`/api/orders/${orderId}/items`)
+            .then(res => res.json())
+            .then(items => {
+                const list = document.getElementById('billItemsList');
+                let total = 0;
+                list.innerHTML = '';
+                
+                if (items.length === 0) {
+                    list.innerHTML = '<p class="text-muted italic">Chưa gọi món nào.</p>';
+                }
+
+                items.forEach(item => {
+                    const info = menuItems[item.menuId] || { name: 'Món Unk', price: 0 };
+                    const subtotal = info.price * item.quantity;
+                    total += subtotal;
+                    
+                    list.insertAdjacentHTML('beforeend', `
+                        <div class="bill-item">
+                            <div>
+                                <div class="bill-item-name">${info.name}</div>
+                                <div class="bill-item-qty">x ${item.quantity}</div>
+                            </div>
+                            <div class="bill-item-price">${subtotal.toLocaleString()}đ</div>
+                        </div>
+                    `);
+                });
+
+                document.getElementById('sidebarTotal').innerText = total.toLocaleString() + 'đ';
+                document.getElementById('payTotalAmount').innerText = total.toLocaleString() + 'đ';
+                document.getElementById('payTableLabel').innerText = tables.find(t => t.id === currentTableId).name;
+            });
+    }
+
+    function openTable(tableId) {
+        fetch('/api/orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tableId: tableId, status: 'OPEN' })
+        }).then(res => {
+            if (res.ok) refreshDashboard();
+        });
+    }
+
+    function submitAddItem() {
+        if (!currentOrderId) return;
+        const menuId = parseInt(document.getElementById('itemMenuSelect').value);
+        const qty = parseInt(document.getElementById('itemQty').value);
+
+        fetch(`/api/orders/${currentOrderId}/items`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ menuId: menuId, quantity: qty })
+        }).then(res => {
+            if (res.ok) {
+                bootstrap.Modal.getInstance(document.getElementById('addItemModal')).hide();
+                selectTable(currentTableId);
+            }
+        });
+    }
+
+    function processPayment() {
+        if (!currentOrderId) return;
+        fetch(`/api/orders/${currentOrderId}/status?status=PAID`, {
+            method: 'PUT'
+        }).then(res => {
+            if (res.ok) {
+                alert('Thanh toán thành công!');
+                bootstrap.Modal.getInstance(document.getElementById('payModal')).hide();
+                refreshDashboard();
+            }
+        });
+    }
+
+    function printInvoice() {
+        const table = tables.find(t => t.id === currentTableId);
+        const total = document.getElementById('payTotalAmount').innerText;
+        const itemsList = document.getElementById('billItemsList').innerHTML;
+        
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>LuxManage - Hóa Đơn</title>
+                <style>
+                    body { font-family: sans-serif; padding: 40px; color: #333; max-width: 500px; margin: auto; border: 1px solid #eee; }
+                    .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; }
+                    .resort-name { font-size: 24px; font-weight: bold; }
+                    .invoice-info { display: flex; justify-content: space-between; margin: 20px 0; font-size: 14px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #eee; }
+                    .total { text-align: right; font-size: 20px; font-weight: bold; margin-top: 30px; border-top: 2px solid #333; padding-top: 10px; }
+                    .footer { margin-top: 50px; text-align: center; font-style: italic; color: #777; font-size: 12px; }
+                    .no-print { display: block; margin-top: 30px; text-align: center; }
+                    @@media print { .no-print { display: none; } body { border: none; } }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div class="resort-name">LUXMANAGE RESORT & SPA</div>
+                    <div>123 Tôn Đức Thắng, Quận 1, TP. HCM</div>
+                    <div>Hotline: 1800-xxxx</div>
+                </div>
+                <h3 style="text-align: center; margin-top: 20px;">HÓA ĐƠN NHÀ HÀNG</h3>
+                <div class="invoice-info">
+                    <div><strong>${table.name}</strong></div>
+                    <div>Ngày: ${new Date().toLocaleString('vi-VN')}</div>
+                </div>
+                <table>
+                    <thead>
+                        <tr><th>Tên món</th><th>Số lượng</th><th>Thành tiền</th></tr>
+                    </thead>
+                    <tbody>
+                        ${Array.from(document.querySelectorAll('#billItemsList .bill-item')).map(el => `
+                            <tr>
+                                <td>${el.querySelector('.bill-item-name').innerText}</td>
+                                <td>${el.querySelector('.bill-item-qty').innerText}</td>
+                                <td>${el.querySelector('.bill-item-price').innerText}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <div class="total">Tổng cộng: ${total}</div>
+                <div class="footer">Cảm ơn quý khách đã sử dụng dịch vụ tại LuxManage!</div>
+                <div class="no-print">
+                    <button onclick="window.print()" style="padding: 10px 30px; background: #6366f1; color: white; border: none; border-radius: 20px; cursor: pointer; font-weight: bold;">IN HÓA ĐƠN</button>
+                    <button onclick="window.close()" style="margin-left: 10px; border: none; background: transparent; color: #666; cursor: pointer;">Đóng</button>
+                </div>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+    }
+</script>
+}

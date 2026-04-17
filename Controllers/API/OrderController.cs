@@ -1,6 +1,8 @@
-﻿using ASP.Data;
-using ASP.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
+using System;
+using ASP.Data;
+using ASP.Models;
 
 namespace ASP.Controllers.API;
 
@@ -13,6 +15,19 @@ public class OrderController : ControllerBase
     public OrderController(AppDbContext context)
     {
         _context = context;
+    }
+
+    [HttpGet]
+    public IActionResult GetAll()
+    {
+        return Ok(_context.Orders.ToList());
+    }
+
+    [HttpGet("{id}/items")]
+    public IActionResult GetItems(int id)
+    {
+        var items = _context.OrderDetails.Where(d => d.OrderId == id).ToList();
+        return Ok(items);
     }
 
     // Tạo order

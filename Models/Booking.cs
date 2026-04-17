@@ -11,5 +11,8 @@ public class Booking
     public DateTime CheckIn { get; set; }
     public DateTime CheckOut { get; set; }
 
+    public string CustomerName { get; set; }
+    public string CustomerPhone { get; set; }
+
     public string Status { get; set; } = "PENDING";
 }

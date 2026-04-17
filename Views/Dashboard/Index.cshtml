@@ -1,0 +1,297 @@
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Tổng Quan";
+}
+<style>
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+    .kpi-card {
+        padding: 24px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+    .kpi-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+    }
+    .kpi-icon.revenue { background: rgba(99, 102, 241, 0.15); color: var(--primary); }
+    .kpi-icon.rooms { background: rgba(236, 72, 153, 0.15); color: var(--secondary); }
+    .kpi-icon.tables { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .kpi-icon.orders { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    
+    .kpi-info h4 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 0 4px 0;
+    }
+    .kpi-info p {
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    .dashboard-sections {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+    }
+    .section-card {
+        padding: 24px;
+    }
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .badge-status {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .badge-success { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+    .badge-warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    
+    .recent-list {
+        list-style: none;
+        padding: 0;
+    }
+    .recent-list li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 0;
+        border-bottom: 1px solid var(--glass-border);
+    }
+    .recent-list li:last-child {
+        border-bottom: none;
+    }
+</style>
+
+<div class="page-header mb-4">
+    <h1 class="page-title">Chào buổi sáng, Ngọc Hằng 👋</h1>
+    <p class="text-muted">Dưới đây là tóm tắt hoạt động của hệ thống ngày hôm nay.</p>
+</div>
+
+<div class="kpi-grid">
+    <div class="glass-card kpi-card">
+        <div class="kpi-icon revenue"><i class="fa-solid fa-wallet"></i></div>
+        <div class="kpi-info">
+            <h4>@ViewBag.TotalRevenue</h4>
+            <p>Doanh thu hôm nay</p>
+        </div>
+    </div>
+    <div class="glass-card kpi-card">
+        <div class="kpi-icon rooms"><i class="fa-solid fa-door-open"></i></div>
+        <div class="kpi-info">
+            <h4>@ViewBag.AvailableRooms Phòng</h4>
+            <p>Phòng trống</p>
+        </div>
+    </div>
+    <div class="glass-card kpi-card">
+        <div class="kpi-icon tables"><i class="fa-solid fa-utensils"></i></div>
+        <div class="kpi-info">
+            <h4>@ViewBag.ActiveTables Bàn</h4>
+            <p>Đang phục vụ</p>
+        </div>
+    </div>
+    <div class="glass-card kpi-card">
+        <div class="kpi-icon orders"><i class="fa-solid fa-bell-concierge"></i></div>
+        <div class="kpi-info">
+            <h4>@ViewBag.PendingOrders</h4>
+            <p>Yêu cầu dịch vụ</p>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="glass-card section-card h-100">
+            <h5 class="section-title">Xu hướng Doanh thu (7 ngày qua)</h5>
+            <canvas id="revenueChart" style="max-height: 300px;"></canvas>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="glass-card section-card h-100">
+            <h5 class="section-title">Trạng thái Phòng</h5>
+            <canvas id="occupancyChart" style="max-height: 300px;"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-sections">
+    <div class="glass-card section-card">
+        <div class="section-title">
+            <span>Booking & Order Mới Nhất</span>
+            <a href="#" class="text-info text-decoration-none" style="font-size: 0.9rem;">Xem tất cả</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Mã</th>
+                        <th>Khách hàng</th>
+                        <th>Dịch vụ</th>
+                        <th>Trạng thái</th>
+                        <th>Số tiền</th>
+                    </tr>
+                </thead>
+                <tbody id="recentActivityBody">
+                    <tr><td colspan="5" class="text-center text-muted">Đang tải hoạt động...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="glass-card section-card">
+        <div class="section-title">
+            <span>Việc Cần Làm</span>
+        </div>
+        <ul class="recent-list">
+            <li>
+                <div>
+                    <strong>Dọn phòng 204</strong>
+                    <div class="text-muted" style="font-size: 0.8rem;">Khách vừa checkout cách đây 15p</div>
+                </div>
+                <button class="action-btn" style="width: 32px; height: 32px;"><i class="fa-solid fa-check"></i></button>
+            </li>
+            <li>
+                <div>
+                    <strong>Xác nhận đặt bàn cho nhóm 10 người</strong>
+                    <div class="text-muted" style="font-size: 0.8rem;">Vào lúc 19:00 tối nay</div>
+                </div>
+                <button class="action-btn" style="width: 32px; height: 32px;"><i class="fa-solid fa-check"></i></button>
+            </li>
+        </ul>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        loadRecentActivity();
+        initCharts();
+    });
+
+    function initCharts() {
+        // Line Chart: Revenue
+        const ctxRevenue = document.getElementById('revenueChart').getContext('2d');
+        new Chart(ctxRevenue, {
+            type: 'line',
+            data: {
+                labels: ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'],
+                datasets: [{
+                    label: 'Doanh thu (VNĐ)',
+                    data: [1200000, 1900000, 3000000, 5000000, 2300000, 3100000, 4800000],
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { 
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, border: { display: false } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // Pie Chart: Occupancy
+        const ctxOccupancy = document.getElementById('occupancyChart').getContext('2d');
+        new Chart(ctxOccupancy, {
+            type: 'doughnut',
+            data: {
+                labels: ['Trống', 'Có khách', 'Đang dọn'],
+                datasets: [{
+                    data: [@ViewBag.AvailableRooms, 6, 3], // Demo logic: 6 occupied, 3 cleaning
+                    backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 20 } } },
+                cutout: '70%'
+            }
+        });
+    }
+
+    async function loadRecentActivity() {
+        try {
+            const [ordersRes, bookingsRes] = await Promise.all([
+                fetch('/api/orders'),
+                fetch('/api/bookings')
+            ]);
+            
+            const orders = await ordersRes.json();
+            const bookings = await bookingsRes.json();
+            
+            const tbody = document.getElementById('recentActivityBody');
+            tbody.innerHTML = '';
+
+            // Combine and format
+            let activities = [
+                ...orders.map(o => ({
+                    id: `ORD${o.id}`,
+                    customer: 'Khách lẻ',
+                    service: `Nhà hàng (Bàn ${o.tableId || '??'})`,
+                    status: o.status === 'OPEN' ? 'warning' : 'success',
+                    statusText: o.status === 'OPEN' ? 'Đang phục vụ' : 'Đã thanh toán',
+                    sortId: o.id + 1000 // Just for sorting
+                })),
+                ...bookings.map(b => ({
+                    id: `BOK${b.id}`,
+                    customer: b.customerName || 'Khách đặt web',
+                    service: `Khách sạn (Phòng ${b.roomId})`,
+                    status: b.status === 'PENDING' ? 'info' : (b.status === 'CHECKED_IN' ? 'success' : 'secondary'),
+                    statusText: b.status === 'PENDING' ? 'Chờ nhận phòng' : (b.status === 'CHECKED_IN' ? 'Đã nhận phòng' : 'Đã trả phòng'),
+                    sortId: b.id
+                }))
+            ];
+
+            // Sort by "newest" (higher ID roughly) and take top 6
+            activities.sort((a, b) => b.sortId - a.sortId);
+            const recent = activities.slice(0, 6);
+
+            if(recent.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Chưa có hoạt động nào.</td></tr>';
+                return;
+            }
+
+            recent.forEach(act => {
+                const badgeClass = `badge-${act.status}`;
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr>
+                        <td class="fw-bold">#${act.id}</td>
+                        <td>${act.customer}</td>
+                        <td>${act.service}</td>
+                        <td><span class="badge-status ${badgeClass}">${act.statusText}</span></td>
+                        <td>---</td>
+                    </tr>
+                `);
+            });
+        } catch (e) {
+            console.error(e);
+        }
+    }
+</script>
+}
